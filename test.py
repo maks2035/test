@@ -3,6 +3,9 @@ import time
 import psutil
 import GPUtil
 import threading
+import keyboard
+
+exit_event = threading.Event()
 
 def write_metric (name, value):
     current_time = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -10,37 +13,61 @@ def write_metric (name, value):
         writer = csv.writer(file)
         writer.writerow([current_time, name, value])
 
-def monitor_cpu_temp():
-    while True:
+def monitor_cpu_percent():
+    flag = True
+    while flag:
         cpu_percent = psutil.cpu_percent()
         write_metric("CPU percent", cpu_percent)
-        time.sleep(60)
-
+        for i in range(60):
+            if exit_event.is_set():
+                flag = False
+                break
+            time.sleep(1)
+    print(" monitor_cpu_temp end ", end = "\n")
 def monitor_memory():
-    while True:
+    flag = True
+    while flag:
         ram_percent = psutil.virtual_memory().percent
         write_metric("RAM", ram_percent)
-        time.sleep(60)
+        for i in range(60):
+            if exit_event.is_set():
+                flag = False
+                break
+            time.sleep(1)
+    print(" monitor_memory end ", end = "\n")
 
 def monitor_gpu_temp():
-    while True:
+    flag = True
+    while flag:
         gpus = GPUtil.getGPUs()
         for gpu in gpus:
             gpu_name = gpu.name
             gpu_temp = gpu.temperature
         write_metric("".join([gpu_name," temp"]), gpu_temp)
-        time.sleep(60)
+        for i in range(60):
+            if exit_event.is_set():
+                flag = False
+                break
+            time.sleep(1)
+    print(" monitor_gpu_temp end ", end = "\n")
 
 def monitor_gpu_memory():
-    while True:
+    flag = True
+    while flag:
         gpus = GPUtil.getGPUs()
         for gpu in gpus:
             gpu_name = gpu.name
             gpu_memory_percent = gpu.memoryUtil * 100
         write_metric("".join([gpu_name," memory"]), gpu_memory_percent)
-        time.sleep(60)
+        for i in range(60):
+            if exit_event.is_set():
+                flag = False
+                break
+            time.sleep(1)
+    print(" monitor_gpu_memory end ", end = "\n")
 
-cpu_thread = threading.Thread(target=monitor_cpu_temp)
+print("start, press the SPACE to terminate the program")
+cpu_thread = threading.Thread(target=monitor_cpu_percent)
 memory_thread = threading.Thread(target=monitor_memory)
 gpu_temperature_thread = threading.Thread(target=monitor_gpu_temp)
 gpu_memory_thread = threading.Thread(target=monitor_gpu_memory)
@@ -50,11 +77,9 @@ memory_thread.start()
 gpu_temperature_thread.start()
 gpu_memory_thread.start()
 
-try:
-    cpu_thread.join()
-    memory_thread.join()
-    gpu_temperature_thread.join()
-    gpu_memory_thread.join()
-except KeyboardInterrupt:
-    pass
+keyboard.add_hotkey('space', lambda: exit_event.set())
 
+cpu_thread.join()
+memory_thread.join()
+gpu_temperature_thread.join()
+gpu_memory_thread.join()
