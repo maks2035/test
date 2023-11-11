@@ -23,7 +23,7 @@ def monitor_cpu_percent():
                 flag = False
                 break
             time.sleep(1)
-    print(" monitor_cpu_temp end ", end = "\n")
+    print(" monitor_cpu_percent end ", end = "\n")
 def monitor_memory():
     flag = True
     while flag:
@@ -43,13 +43,13 @@ def monitor_gpu_temp():
         for gpu in gpus:
             gpu_name = gpu.name
             gpu_temp = gpu.temperature
-        write_metric("".join([gpu_name," temp"]), gpu_temp)
+        write_metric("".join([gpu_name," percent"]), gpu_temp)
         for i in range(60):
             if exit_event.is_set():
                 flag = False
                 break
             time.sleep(1)
-    print(" monitor_gpu_temp end ", end = "\n")
+    print(" monitor_gpu_percent end ", end = "\n")
 
 def monitor_gpu_memory():
     flag = True
